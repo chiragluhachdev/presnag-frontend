@@ -1,4 +1,12 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5008";
+// Normalise the API base URL: ensure it's absolute (with scheme) and has no
+// trailing slash. Without a scheme the browser treats it as a RELATIVE path and
+// appends it to the current page (e.g. /admin/<host>/api/...) → 405 errors.
+const RAW_API_URL = import.meta.env.VITE_API_URL || "http://localhost:5008";
+const API_URL = (() => {
+  let u = String(RAW_API_URL).trim().replace(/\/+$/, "");
+  if (u && !/^https?:\/\//i.test(u)) u = `https://${u}`;
+  return u;
+})();
 
 export const TOKEN_KEY = "presnag_token";
 

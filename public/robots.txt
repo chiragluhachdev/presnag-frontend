@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Keep auth/dashboards out of the index
+Disallow: /admin
+Disallow: /vendor
+Disallow: /checkout
+Disallow: /order
+Disallow: /track
+
+Sitemap: https://www.presnag.com/sitemap.xml
