@@ -1,0 +1,174 @@
+export type Role = "SUPER_ADMIN" | "ADMIN" | "VENDOR";
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  slug?: string;
+}
+
+export interface Vendor {
+  _id: string;
+  name: string;
+  ownerName?: string;
+  slug: string;
+  email?: string;
+  phone?: string;
+  description?: string;
+  address?: string;
+  logo?: string;
+  banner?: string;
+  fssaiLicense?: string;
+  category: string;
+  openingHours?: string;
+  openTime?: string;
+  closeTime?: string;
+  isOpen: boolean;
+  whatsappOrderAlerts?: boolean;
+  dineInEnabled?: boolean;
+  takeAwayEnabled?: boolean;
+  isFeatured?: boolean;
+  featuredOrder?: number;
+  prepTime: number;
+  status: "pending" | "active" | "suspended" | "inactive";
+  subscriptionPlan?: string;
+  socialLinks?: { instagram?: string; facebook?: string; website?: string };
+  lat?: number;
+  lng?: number;
+  createdAt?: string;
+  // Settlement / payments
+  settlementMode?: "MANAGED" | "DIRECT";
+  eligibleForDirectMigration?: boolean;
+  managedPayout?: {
+    accountHolderName?: string;
+    accountNumber?: string;      // full (admin views only)
+    accountNumberLast4?: string;
+    ifsc?: string;
+    pan?: string;                // full (admin views only)
+    panMasked?: string;
+  };
+  cashfreeBeneficiaryId?: string;
+  cashfreeVendorId?: string;
+  kycStatus?: "not_started" | "in_progress" | "active" | "rejected";
+}
+
+export interface Category {
+  _id: string;
+  vendorId: string;
+  name: string;
+  image?: string;
+  sortOrder?: number;
+}
+
+export interface CustomizationOption {
+  id: string;
+  label: string;
+  description?: string;
+  image?: string;
+  priceType: "fixed" | "free";
+  price: number;
+  isAvailable: boolean;
+  isDefault: boolean;
+  displayOrder: number;
+  inStock: boolean;
+  isHidden: boolean;
+  availableHours?: { start: string; end: string }[];
+  availableDays?: number[];
+}
+
+export interface Customization {
+  id: string;
+  name: string;
+  description?: string;
+  type: "single" | "multi";
+  required?: boolean;
+  isActive: boolean;
+  displayOrder: number;
+  minSelections: number;
+  maxSelections?: number;
+  dependency?: {
+    groupId: string;
+    optionId: string;
+  };
+  options: CustomizationOption[];
+}
+
+export interface CustomizationTemplate {
+  _id: string;
+  vendorId: string;
+  name: string;
+  customizations: Customization[];
+  createdAt: string;
+  updatedAt: string;
+}
+export interface MenuItem {
+  _id: string;
+  vendorId: string;
+  categoryId: string;
+  name: string;
+  description?: string;
+  price: number;
+  image?: string;
+  isAvailable: boolean;
+  customizations?: Customization[];
+}
+
+export interface SelectedAddon {
+  group: string;
+  label: string;
+  price: number;
+}
+
+export type OrderStatus =
+  | "received"
+  | "accepted"
+  | "preparing"
+  | "ready"
+  | "collected"
+  | "cancelled";
+
+export interface OrderItem {
+  itemId: string;
+  name: string;
+  price: number;
+  qty: number;
+  instructions?: string;
+  addons?: SelectedAddon[];
+}
+
+export interface Order {
+  _id: string;
+  vendorId: string | Vendor;
+  orderNumber: string;
+  customerName?: string;
+  customerPhone?: string;
+  note?: string;
+  orderType?: "DINE_IN" | "TAKE_AWAY";
+  items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  couponCode?: string;
+  paymentMethod: "COD" | "RAZORPAY" | "CASHFREE";
+  paymentStatus: "pending" | "paid";
+  status: OrderStatus;
+  pickupTime?: string;
+  cancelledBy?: "vendor" | "system" | "admin" | "customer" | "";
+  cancelReason?: string;
+  settlementMode?: "MANAGED" | "DIRECT";
+  settlementStatus?: "not_applicable" | "pending" | "processing" | "settled" | "failed";
+  createdAt: string;
+}
+
+export interface Coupon {
+  _id: string;
+  code: string;
+  type: "percent" | "fixed";
+  value: number;
+  expiry?: string;
+  usageLimit: number;
+  usedCount: number;
+  isActive: boolean;
+}
