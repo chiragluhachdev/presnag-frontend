@@ -35,7 +35,7 @@ const statusColor: Record<OrderStatus, any> = {
 
 // Must match the backend AUTO_CANCEL_SECONDS — a new order auto-declines if the
 // vendor doesn't respond within this window.
-const AUTO_CANCEL_SECONDS = 60;
+const AUTO_CANCEL_SECONDS = 180;
 
 // "preparing" is legacy (old orders) — treated as active for backward compatibility.
 const isActive = (o: Order) => o.status === "received" || o.status === "accepted" || o.status === "preparing";
@@ -51,20 +51,27 @@ export default function Orders() {
   });
 
   async function updateStatus(id: string, status: OrderStatus, reason?: string) {
+    if (useSound.getState().enabled) playClickSound();
+    // Optimistic: move the card instantly (no waiting for the network round-trip).
+    const prev = qc.getQueryData<Order[]>(["vendor-orders"]);
+    qc.setQueryData<Order[]>(["vendor-orders"], (old) =>
+      (old || []).map((o) => (o._id === id ? { ...o, status } : o))
+    );
+    if (status === "accepted") toast.success("Order accepted");
+    if (status === "ready") toast.success("Marked ready for pickup");
+    if (status === "collected") toast.success("Order delivered");
+    if (status === "cancelled") toast.success("Order declined");
     try {
-      if (useSound.getState().enabled) playClickSound();
       await api(`/api/vendor/orders/${id}/status`, {
         method: "PATCH",
         body: { status, ...(reason ? { reason } : {}) },
         auth: true,
       });
-      if (status === "accepted") toast.success("Order accepted");
-      if (status === "ready") toast.success("Marked ready for pickup");
-      if (status === "collected") toast.success("Order delivered");
-      if (status === "cancelled") toast.success("Order declined");
       qc.invalidateQueries({ queryKey: ["vendor-orders"] });
       qc.invalidateQueries({ queryKey: ["vendor-stats"] });
     } catch (e: any) {
+      // Roll back the optimistic change on failure.
+      if (prev) qc.setQueryData(["vendor-orders"], prev);
       toast.error(e.message);
     }
   }
@@ -101,7 +108,8 @@ function useAutoCancelCountdown(createdAt: string) {
   }, []);
   const ms = Math.max(0, deadline - now);
   const secs = Math.ceil(ms / 1000);
-  return { secs, expired: ms <= 0, label: `0:${String(secs).padStart(2, "0")}` };
+  const label = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+  return { secs, expired: ms <= 0, label };
 }
 
 function SoundToggle() {

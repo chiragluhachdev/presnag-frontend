@@ -41,6 +41,18 @@ export default function Orders() {
     }
   }
 
+  async function deleteOrder(id: string, orderNumber: string) {
+    if (!window.confirm(`Permanently delete order ${orderNumber}? It will disappear from the vendor's orders, payments and all reports. This cannot be undone.`)) return;
+    try {
+      await api(`/api/admin/orders/${id}`, { method: "DELETE", auth: true });
+      toast.success(`Order ${orderNumber} deleted`);
+      qc.invalidateQueries({ queryKey: ["admin-orders"] });
+      qc.invalidateQueries({ queryKey: ["admin-overview"] });
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete");
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -81,6 +93,7 @@ export default function Orders() {
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3">Time</th>
                 <th className="px-5 py-3">Notify</th>
+                <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -104,6 +117,15 @@ export default function Orders() {
                     <td className="px-5 py-3 text-xs text-slate-400">{timeAgo(o.createdAt)}</td>
                     <td className="px-5 py-3">
                       <WhatsAppButton o={o} vendorName={vendor?.name} />
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        onClick={() => deleteOrder(o._id, o.orderNumber)}
+                        title="Delete this order permanently"
+                        className="inline-flex items-center justify-center rounded-lg border border-red-200 bg-red-50 p-1.5 text-red-600 transition hover:bg-red-100"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </td>
                   </tr>
                 );
