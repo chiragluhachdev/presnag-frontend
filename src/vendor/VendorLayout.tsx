@@ -58,6 +58,10 @@ export default function VendorLayout() {
     const onNew = (order: any) => {
       toast.info("🔔 New order received!");
       notify("New order received", order?.orderNumber ? `Order ${order.orderNumber}` : "Open your dashboard to view it.");
+      // Ring instantly on the socket event — don't wait for the refetch round-trip
+      // (the pendingCount effect below then keeps it looping until handled).
+      // Read the live setting to avoid a stale closure on the sound toggle.
+      if (useSound.getState().enabled) startOrderAlarm();
       qc.invalidateQueries({ queryKey: ["vendor-orders"] });
       qc.invalidateQueries({ queryKey: ["vendor-stats"] });
     };

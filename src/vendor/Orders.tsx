@@ -35,12 +35,29 @@ const statusColor: Record<OrderStatus, any> = {
 
 // Must match the backend AUTO_CANCEL_SECONDS — a new order auto-declines if the
 // vendor doesn't respond within this window.
-const AUTO_CANCEL_SECONDS = 180;
+const AUTO_CANCEL_SECONDS = 120;
 
 // "preparing" is legacy (old orders) — treated as active for backward compatibility.
 const isActive = (o: Order) => o.status === "received" || o.status === "accepted" || o.status === "preparing";
 const isReady = (o: Order) => o.status === "ready";
 const isCompleted = (o: Order) => o.status === "collected";
+
+// A "received" order whose response window has elapsed is being auto-declined by
+// the backend right now — drop it from the board immediately instead of leaving
+// a stale "Auto-declining…" card sitting around until the next refetch.
+const isExpiredNew = (o: Order, now: number) =>
+  o.status === "received" && now >= new Date(o.createdAt).getTime() + AUTO_CANCEL_SECONDS * 1000;
+const isActiveNow = (o: Order, now: number) => isActive(o) && !isExpiredNew(o, now);
+
+/** Re-renders on a fixed tick so time-based filters/counters stay live. */
+function useNow(intervalMs = 1000) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(id);
+  }, [intervalMs]);
+  return now;
+}
 
 export default function Orders() {
   const qc = useQueryClient();
@@ -133,8 +150,10 @@ function EmptyState({ label = "No orders here." }: { label?: string }) {
 /* ---------------- MOBILE — app-style, single column, sticky tabs ---------------- */
 function OrdersMobile({ orders, isLoading, updateStatus }: OrdersView) {
   const [tab, setTab] = useState<TabKey>("active");
-  const filter = tab === "active" ? isActive : tab === "ready" ? isReady : isCompleted;
-  const list = (orders || []).filter(filter);
+  const now = useNow();
+  const filterFor = (key: TabKey) => (o: Order) =>
+    key === "active" ? isActiveNow(o, now) : key === "ready" ? isReady(o) : isCompleted(o);
+  const list = (orders || []).filter(filterFor(tab));
 
   return (
     <div className="space-y-4">
@@ -147,7 +166,7 @@ function OrdersMobile({ orders, isLoading, updateStatus }: OrdersView) {
       <div className="sticky top-14 z-20 -mx-4 border-b border-slate-200 bg-slate-100/95 px-4 py-2 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map((t) => {
-            const n = (orders || []).filter(t.key === "active" ? isActive : t.key === "ready" ? isReady : isCompleted).length;
+            const n = (orders || []).filter(filterFor(t.key)).length;
             return (
               <button
                 key={t.key}
@@ -184,7 +203,8 @@ function OrdersMobile({ orders, isLoading, updateStatus }: OrdersView) {
 /* ---------------- DESKTOP — split board: Active | Ready (+ Completed toggle) ---------------- */
 function OrdersDesktop({ orders, isLoading, updateStatus }: OrdersView) {
   const [showCompleted, setShowCompleted] = useState(false);
-  const active = (orders || []).filter(isActive);
+  const now = useNow();
+  const active = (orders || []).filter((o) => isActiveNow(o, now));
   const ready = (orders || []).filter(isReady);
   const completed = (orders || []).filter(isCompleted);
 
