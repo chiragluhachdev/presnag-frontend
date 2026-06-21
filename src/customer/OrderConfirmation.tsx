@@ -111,6 +111,15 @@ export default function OrderConfirmation() {
 
   const vendor = typeof order?.vendorId === "object" ? (order!.vendorId as Vendor) : null;
 
+  // Leaving the payment-failed screen: replace this (failed) entry with Home,
+  // then push the destination — so the browser Back button always lands on Home
+  // and never re-opens the stale payment page. Purely navigation; does not touch
+  // payment verification or order logic.
+  const leaveFailed = (to: string) => {
+    navigate("/", { replace: true });
+    if (to !== "/") navigate(to);
+  };
+
   // Still loading the order itself.
   if (isLoading || !order) {
     return (
@@ -162,16 +171,16 @@ export default function OrderConfirmation() {
             </p>
           </div>
           <div className="mt-2 w-full space-y-2">
-            <Link to="/checkout" className="block">
-              <Button className="w-full" size="lg">
-                <RefreshCw className="h-4 w-4" /> Try Again
-              </Button>
-            </Link>
-            <Link to={vendor?.slug ? `/vendor/${vendor.slug}` : "/"} className="block">
-              <Button variant="outline" className="w-full">
-                {vendor?.slug ? "Back to menu" : "Back to home"}
-              </Button>
-            </Link>
+            <Button className="w-full" size="lg" onClick={() => leaveFailed("/checkout")}>
+              <RefreshCw className="h-4 w-4" /> Try Again
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => leaveFailed(vendor?.slug ? `/vendor/${vendor.slug}` : "/")}
+            >
+              {vendor?.slug ? "Back to menu" : "Back to home"}
+            </Button>
           </div>
           <p className="text-[11px] text-slate-400">
             Already paid? Wait a moment and refresh this page.
