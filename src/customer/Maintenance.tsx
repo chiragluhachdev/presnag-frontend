@@ -18,12 +18,35 @@ export default function Maintenance() {
         </div>
 
         <h1 className="mt-5 text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
-          Platform under development
+          🚧 We're Making PreSnag Better
         </h1>
-        <p className="mt-2 text-sm text-slate-500">
-          We're currently building &amp; improving PreSnag. The platform isn't available right now —
-          please check back soon.
+        <p className="mt-3 text-sm leading-relaxed text-slate-500">
+          PreSnag is currently undergoing scheduled maintenance to improve performance, reliability,
+          and your overall experience.
         </p>
+        <p className="mt-3 text-sm font-semibold text-slate-700">
+          We'll be back online shortly.
+        </p>
+        <p className="mt-3 text-sm text-slate-500">
+          Thank you for your patience and support.
+        </p>
+        <p className="mt-2 text-sm font-semibold text-slate-600">— Team PreSnag</p>
+
+        {/* Payment / refund reassurance */}
+        <div className="mt-6 rounded-xl border border-emerald-100 bg-emerald-50/70 p-4 text-left">
+          <p className="text-sm leading-relaxed text-emerald-800">
+            If you recently placed an order or completed a payment, please don't worry.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-emerald-800">
+            Any successful payment that was not processed due to maintenance will be{" "}
+            <span className="font-semibold">automatically refunded</span> to the original payment
+            method within <span className="font-semibold">12 hours</span>. If you require immediate
+            assistance, please contact our support team.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-emerald-800">
+            Thank you for your patience and understanding.
+          </p>
+        </div>
 
         {/* Contact support */}
         <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/60 p-4 text-left">
