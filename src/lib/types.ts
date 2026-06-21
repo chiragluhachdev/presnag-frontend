@@ -28,6 +28,7 @@ export interface Vendor {
   whatsappOrderAlerts?: boolean;
   dineInEnabled?: boolean;
   takeAwayEnabled?: boolean;
+  hideLogo?: boolean;
   isFeatured?: boolean;
   featuredOrder?: number;
   prepTime: number;

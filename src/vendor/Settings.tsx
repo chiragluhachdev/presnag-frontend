@@ -50,6 +50,7 @@ export default function Stall() {
           takeAwayEnabled: form.takeAwayEnabled,
           prepTime: form.prepTime,
           logo: form.logo,
+          hideLogo: form.hideLogo,
           banner: form.banner,
           socialLinks: form.socialLinks,
         },
@@ -163,6 +164,22 @@ export default function Stall() {
           <Card className="space-y-4 p-5">
             <h3 className="font-semibold">Branding</h3>
             <div><Label>Logo</Label><ImageUpload value={form.logo} onChange={(url) => set("logo", url)} folder="logos" /></div>
+            {/* Hide logo from customers */}
+            <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5">
+              <div>
+                <div className="text-sm font-semibold text-slate-800">Hide logo from customers</div>
+                <div className="text-[11px] text-slate-500">
+                  {form.hideLogo ? "Your logo is hidden on the storefront" : "Your logo is shown to customers"}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => set("hideLogo", !form.hideLogo)}
+                className={cn("relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition", form.hideLogo ? "bg-brand-500" : "bg-slate-300")}
+              >
+                <span className={cn("inline-block h-5 w-5 transform rounded-full bg-white shadow transition", form.hideLogo ? "translate-x-6" : "translate-x-1")} />
+              </button>
+            </div>
             <div><Label>Banner</Label><ImageUpload value={form.banner} onChange={(url) => set("banner", url)} folder="banners" /></div>
           </Card>
 
