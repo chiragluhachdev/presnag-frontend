@@ -60,13 +60,33 @@ export default function Vendors() {
     refresh();
   }
 
+  async function bulkOpen(isOpen: boolean) {
+    const label = isOpen ? "OPEN" : "CLOSE";
+    if (!confirm(`${label} ALL shops? This sets every vendor to ${isOpen ? "open" : "closed"} right now.`)) return;
+    try {
+      const r: any = await api(`/api/admin/vendors/bulk/open`, { method: "PATCH", body: { isOpen }, auth: true });
+      toast.success(`${isOpen ? "Opened" : "Closed"} ${r.updated} shop(s)`);
+      refresh();
+    } catch (e: any) {
+      toast.error(e.message || "Failed");
+    }
+  }
+
   const pending = vendors?.filter((v) => v.status === "pending") || [];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <PageHeader title="Vendor Management" subtitle="Approve, suspend and manage all vendors on the platform." />
-        <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Create Vendor</Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => bulkOpen(false)}>
+            <Power className="h-4 w-4 text-red-500" /> Close All
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => bulkOpen(true)}>
+            <Power className="h-4 w-4 text-emerald-600" /> Open All
+          </Button>
+          <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Create Vendor</Button>
+        </div>
       </div>
 
       {/* Approval queue */}
