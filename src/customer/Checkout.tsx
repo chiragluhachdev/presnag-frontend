@@ -50,7 +50,7 @@ export default function Checkout() {
   const takeAwayEnabled = vendorData ? vendorData.vendor.takeAwayEnabled !== false : true;
   const orderTypeOptions = (
     [
-      dineInEnabled && { key: "DINE_IN" as const, label: "Eat Here", emoji: "🍽️" },
+      dineInEnabled && { key: "DINE_IN" as const, label: "Dine In", emoji: "🍽️" },
       takeAwayEnabled && { key: "TAKE_AWAY" as const, label: "Pick Up", emoji: "🛍️" },
     ].filter(Boolean) as { key: "DINE_IN" | "TAKE_AWAY"; label: string; emoji: string }[]
   );
@@ -58,7 +58,7 @@ export default function Checkout() {
   const shownOrderTypes = orderTypeOptions.length
     ? orderTypeOptions
     : ([
-        { key: "DINE_IN", label: "Eat Here", emoji: "🍽️" },
+        { key: "DINE_IN", label: "Dine In", emoji: "🍽️" },
         { key: "TAKE_AWAY", label: "Pick Up", emoji: "🛍️" },
       ] as const);
 
