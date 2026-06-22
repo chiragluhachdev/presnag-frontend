@@ -35,13 +35,55 @@ export default function VendorPage() {
     enabled: !!slug,
   });
 
+  const bannerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 90);
+      const bannerHeight = bannerRef.current?.clientHeight || 288;
+      setIsScrolled(window.scrollY > bannerHeight - 20);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Auto-scroll slightly down on load to scroll past the image part of the banner
+  // leaving the back button and vendor name visible at the top.
+  useEffect(() => {
+    if (data && !isLoading) {
+      setTimeout(() => {
+        // Only auto-scroll if the user hasn't already scrolled down
+        if (window.scrollY < 10) {
+          const bannerHeight = bannerRef.current?.clientHeight || 288;
+          const targetY = bannerHeight - 110;
+          
+          // Custom smooth scroll animation for a guaranteed smooth effect
+          const startY = window.scrollY;
+          const distance = targetY - startY;
+          let startTime: number | null = null;
+          const duration = 600; // 600ms duration for a faster but still smooth scroll
+
+          const animationStep = (currentTime: number) => {
+            if (startTime === null) startTime = currentTime;
+            const timeElapsed = currentTime - startTime;
+            const progress = Math.min(timeElapsed / duration, 1);
+            
+            // easeInOutQuart easing function for a very smooth start and end
+            const ease = progress < 0.5 
+              ? 8 * progress * progress * progress * progress 
+              : 1 - Math.pow(-2 * progress + 2, 4) / 2;
+            
+            window.scrollTo(0, startY + distance * ease);
+            
+            if (timeElapsed < duration) {
+              window.requestAnimationFrame(animationStep);
+            }
+          };
+          
+          window.requestAnimationFrame(animationStep);
+        }
+      }, 1);
+    }
+  }, [data, isLoading]);
 
   const scrollToCategory = (id: string) => {
     const el = document.getElementById(`cat-${id}`);
@@ -85,70 +127,65 @@ export default function VendorPage() {
     <div className="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-slate-50 pb-28 lg:pb-0 relative">
       <SiteHeader />
 
-      {/* Zomato-style Header: Collapses into sticky bar on scroll */}
-      <div 
-        className={cn(
-          "sticky top-0 z-30 flex w-full flex-col bg-white transition-all duration-200",
-          isScrolled ? "shadow-sm" : ""
+      {/* 1. Normal Flow Banner (Scrolls away naturally) */}
+      <div ref={bannerRef} className="relative w-full overflow-hidden h-72 sm:h-80 lg:h-96">
+        {vendor.banner ? (
+          <img src={vendor.banner} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full bg-gradient-to-br from-brand-500 to-orange-600" />
         )}
-      >
-        <div 
-          className={cn(
-            "relative w-full overflow-hidden transition-all duration-300",
-            isScrolled ? "h-0 opacity-0" : "h-40 sm:h-52 lg:h-64"
-          )}
-        >
-          {vendor.banner ? (
-            <img src={vendor.banner} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-br from-brand-500 to-orange-600" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-          
-          <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-            <Link
-              to="/shops"
-              className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-white/90 transition hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" /> Back
-            </Link>
-            <h1 className="text-2xl font-extrabold drop-shadow-md sm:text-3xl">{vendor.name}</h1>
-            <p className="mt-0.5 line-clamp-1 text-sm text-white/90">{vendor.description}</p>
-          </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        
+        <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+          <Link
+            to="/shops"
+            className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-white/90 transition hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back
+          </Link>
+          <h1 className="text-2xl font-extrabold drop-shadow-md sm:text-3xl">{vendor.name}</h1>
+          <p className="mt-0.5 line-clamp-1 text-sm text-white/90">{vendor.description}</p>
         </div>
+      </div>
 
-        {/* Info Strip (Visible always, but compact when scrolled) */}
-        <div className={cn("flex flex-col gap-2 px-4 py-3 transition-all", isScrolled ? "pb-2 pt-3" : "pt-4")}>
+      {/* 2. Sticky Info Strip & Search */}
+      <div className="sticky top-0 z-30 flex w-full flex-col bg-white shadow-sm border-b border-slate-100">
+        <div className="flex flex-col gap-2 px-4 py-3">
+          {/* Compact Title (Shows when scrolled past banner) */}
           {isScrolled && (
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 animate-in fade-in slide-in-from-top-2">
               <Link to="/shops" className="text-slate-500 hover:text-slate-800"><ArrowLeft className="h-5 w-5" /></Link>
               <h1 className="text-lg font-bold text-slate-900 truncate">{vendor.name}</h1>
             </div>
           )}
-          <div className="flex flex-wrap items-center justify-between gap-y-2 text-xs text-slate-600 sm:text-sm">
-            <div className="flex items-center gap-3 font-medium">
-              <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4 text-slate-400" /> {vendor.prepTime} mins
-              </span>
-              {vendor.address && (
-                <span className="flex items-center gap-1 max-w-[150px] truncate sm:max-w-xs">
-                  <MapPin className="h-4 w-4 text-slate-400" /> {vendor.address}
+
+          {/* Info Strip (Shows when NOT scrolled) */}
+          {!isScrolled && (
+            <div className="flex flex-wrap items-center justify-between gap-y-2 text-xs text-slate-600 sm:text-sm animate-in fade-in">
+              <div className="flex items-center gap-3 font-medium">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-4 w-4 text-slate-400" /> {vendor.prepTime} mins
                 </span>
-              )}
+                {vendor.address && (
+                  <span className="flex items-center gap-1 max-w-[150px] truncate sm:max-w-xs">
+                    <MapPin className="h-4 w-4 text-slate-400" /> {vendor.address}
+                  </span>
+                )}
+              </div>
+              <span
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                  vendor.isOpen ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                )}
+              >
+                <span className={cn("h-1.5 w-1.5 rounded-full", vendor.isOpen ? "bg-green-500" : "bg-red-500")} />
+                {vendor.isOpen ? "Open" : "Closed"}
+              </span>
             </div>
-            <span
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-                vendor.isOpen ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-              )}
-            >
-              <span className={cn("h-1.5 w-1.5 rounded-full", vendor.isOpen ? "bg-green-500" : "bg-red-500")} />
-              {vendor.isOpen ? "Open" : "Closed"}
-            </span>
-          </div>
+          )}
 
           {/* Sticky Search Bar */}
-          <div className="mt-2 flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-100/50 px-3 py-2.5 focus-within:border-brand-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-100 transition-colors">
+          <div className="mt-1 flex min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-100/50 px-3 py-2.5 focus-within:border-brand-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-brand-100 transition-colors">
             <Search className="h-4 w-4 shrink-0 text-brand-500" />
             <input
               value={q}
