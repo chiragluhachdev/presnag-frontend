@@ -1,6 +1,6 @@
 export function playOrderChime() {
   try {
-    const audio = new Audio("/NewOrder.mp3");
+    const audio = new Audio("/XXX.mp3");
     audio.play().catch((err) => {
       console.warn("Order sound playback was blocked or failed:", err);
     });
@@ -19,7 +19,7 @@ let alarmWanted = false;
 
 function ensureAlarmEl(): HTMLAudioElement {
   if (!alarmAudio) {
-    alarmAudio = new Audio("/NewOrder.mp3");
+    alarmAudio = new Audio("/XXX.mp3");
     alarmAudio.loop = true;
   }
   return alarmAudio;
